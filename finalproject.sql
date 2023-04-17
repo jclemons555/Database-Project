@@ -236,11 +236,13 @@ WHERE E.COURSEID = 9876 AND S.StudentID=E.StudentID;
 
 -- 6. List all of the students in a course and all of their scores on every assignment;
 
-SELECT E.StudentID,a.AssignmentID, g.AwardedPoints
+SELECT E.StudentID,a.AssignmentID, E.COURSEID, g.AwardedPoints
 FROM ASSIGNMENT a, Grade g, ENROLLMENT E
-WHERE E.STUDENTID=G.STUDENTID AND E.COURSEID = 7654;-- AND g.AssignmentID=a.AssignmentID;
+WHERE E.STUDENTID=G.STUDENTID AND E.COURSEID = 6543 AND g.AssignmentID=a.AssignmentID;
+
 
 -- 7. Add an assignment to a course;
+SET SQL_SAFE_UPDATES = 0;
 INSERT INTO ASSIGNMENT VALUES(29,14,100,1);
 
 -- 8. Change the percentages of the categories for a course;
@@ -278,14 +280,16 @@ WHERE S.L_NAME LIKE 'Q%';
 
 
 -- 11.Compute the grade for a student;
-SELECT c.CourseName, SUM(g.AwardedPoints * co.Percentage / 100) AS TotalPoints
-FROM COURSE c
-JOIN ENROLLMENT e ON e.CourseID = c.CourseID
-JOIN COMPUTATION co ON co.CourseID = c.CourseID
-JOIN ASSIGNMENT a ON a.ComputationID = co.ComputationID
-JOIN GRADE g ON g.AssignmentID = a.AssignmentID AND g.StudentID = e.StudentID
-WHERE e.StudentID = 12345 AND e.CourseID = 7654
-GROUP BY c.CourseName;
+SELECT SUM((G.AwardedPoints) * (C.PERCENTAGE/INSTANCE)/TotalPoints) AS grade
+FROM GRADE G
+LEFT JOIN ASSIGNMENT A ON G.ASSIGNMENTID = A.ASSIGNMENTID
+JOIN COMPUTATION C ON C.COMPUTATIONID = A.COMPUTATIONID
+JOIN(SELECT C.COMPUTATIONID, COUNT(*)AS COUNTER FROM GRADE G
+LEFT JOIN ASSIGNMENT A ON G.ASSIGNMENTID = A.ASSIGNMENTID
+JOIN COMPUTATION C ON C.COMPUTATIONID = A.COMPUTATIONID
+WHERE COURSEID AND STUDENTID GROUP BY C.COMPUTATIONID)
+J ON J.COMPUTATIONID = C.COMPUTATIONID
+WHERE COURSEID = 7654 AND STUDENTID = 12345;
 
 
 -- 12. Compute the grade for a student, where the lowest score for a given category is dropped.
