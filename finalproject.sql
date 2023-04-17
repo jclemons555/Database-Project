@@ -278,25 +278,32 @@ WHERE S.L_NAME LIKE 'Q%';
 
 
 -- 11.Compute the grade for a student;
-SELECT SUM((G.AwardedPoints) * (C.PERCENTAGE/C.INSTANCE)/TotalPoints) AS grade
-FROM GRADE G
-LEFT JOIN ASSIGNMENT A ON G.ASSIGNMENTID = A.ASSIGNMENTID
-JOIN COMPUTATION C ON C.COMPUTATIONID = A.COMPUTATIONID
-JOIN(SELECT C.COMPUTATIONID, COUNT(*)AS COUNTER FROM GRADE G
-LEFT JOIN ASSIGNMENT A ON G.ASSIGNMENTID = A.ASSIGNMENTID
-JOIN COMPUTATION C ON C.COMPUTATIONID = A.COMPUTAIONID
-WHERE COURSEID = 7654 AND STUDENTID = 12345 GROUP BY C.COMPUTATIONID)
-J ON J.COMPUTATIONID = C.COMPUTATIONID
-WHERE COURSEID = 7654 AND STUDENTID = 12345;
+SELECT c.CourseName, SUM(g.AwardedPoints * co.Percentage / 100) AS TotalPoints
+FROM COURSE c
+JOIN ENROLLMENT e ON e.CourseID = c.CourseID
+JOIN COMPUTATION co ON co.CourseID = c.CourseID
+JOIN ASSIGNMENT a ON a.ComputationID = co.ComputationID
+JOIN GRADE g ON g.AssignmentID = a.AssignmentID AND g.StudentID = e.StudentID
+WHERE e.StudentID = 12345 AND e.CourseID = 7654
+GROUP BY c.CourseName;
 
 
 -- 12. Compute the grade for a student, where the lowest score for a given category is dropped.
 
-
-
-
-
-
-
-
-
+SELECT s.StudentID, c.CourseName, 
+  ROUND(SUM(GREATEST(g.AwardedPoints, subquery.min_points) * comp.Percentage / 100), 2) AS Grade
+FROM STUDENT s 
+JOIN ENROLLMENT e ON s.StudentID = e.StudentID 
+JOIN COURSE c ON e.CourseID = c.CourseID 
+JOIN COMPUTATION comp ON c.CourseID = comp.CourseID 
+JOIN ASSIGNMENT a ON comp.ComputationID = a.ComputationID 
+JOIN GRADE g ON s.StudentID = g.StudentID AND a.AssignmentID = g.AssignmentID 
+JOIN (
+  SELECT comp.Type, comp.CourseID, MIN(g.AwardedPoints) AS min_points
+  FROM COMPUTATION comp 
+  JOIN ASSIGNMENT a ON comp.ComputationID = a.ComputationID 
+  JOIN GRADE g ON a.AssignmentID = g.AssignmentID 
+  GROUP BY comp.Type, comp.CourseID
+) subquery ON comp.Type = subquery.Type AND comp.CourseID = subquery.CourseID 
+WHERE s.StudentID = 12345 AND e.CourseID = 7654
+GROUP BY s.StudentID, c.CourseName;
