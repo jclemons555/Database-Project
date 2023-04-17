@@ -17,4 +17,6 @@ Add 2 points just to those students whose last name contains a ‘Q’.
 Compute the grade for a student;
 Compute the grade for a student, where the lowest score for a given category is dropped.
 
-used MySQL Workbench
+used MySQL Workbench to compile code
+
+3. ERD 
